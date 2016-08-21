@@ -67,7 +67,7 @@ def main():
     if args.debug:
         log.setLevel(logging.DEBUG)
     else:
-        log.setLevel(logging.INFO)
+        log.setLevel(logging.WARNING);
 
     # Let's not forget to run Grunt / Only needed when running with webserver
     if not args.no_server:

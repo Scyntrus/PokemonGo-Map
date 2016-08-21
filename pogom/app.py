@@ -3,6 +3,9 @@
 
 import calendar
 import logging
+import time
+from multiprocessing import Pool
+import os
 
 from flask import Flask, jsonify, render_template, request
 from flask.json import JSONEncoder
@@ -19,6 +22,13 @@ from .models import Pokemon, Gym, Pokestop, ScannedLocation
 log = logging.getLogger(__name__)
 compress = Compress()
 
+def async_restart():
+    time.sleep(5)
+    print "[+] RESTARTING SERVER"
+    if (os.name == "nt"):
+        os.system("taskkill /F /IM python.exe")
+    else:
+        os.system("pkill python")
 
 class Pogom(Flask):
     def __init__(self, import_name, **kwargs):
@@ -30,6 +40,7 @@ class Pogom(Flask):
         self.route("/loc", methods=['GET'])(self.loc)
         self.route("/next_loc", methods=['POST'])(self.next_loc)
         self.route("/mobile", methods=['GET'])(self.list_pokemon)
+        self.route("/restart", methods=['GET'])(self.restart)
         self.route("/search_control", methods=['GET'])(self.get_search_control)
         self.route("/search_control", methods=['POST'])(self.post_search_control)
         self.route("/stats", methods=['GET'])(self.get_stats)
@@ -226,6 +237,22 @@ class Pogom(Flask):
                                valid_input=self.get_valid_stat_input()
                                )
 
+    def restart(self):
+        print "[+] INITIATING SERVER RESTART"
+        pool = Pool(processes=1)
+        pool.apply_async(async_restart)
+        return """
+<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="refresh" content="1;url=/">
+        <script type="text/javascript">
+            window.location.href = "/"
+        </script>
+    </head>
+</html>
+"""
 
 class CustomJSONEncoder(JSONEncoder):
 

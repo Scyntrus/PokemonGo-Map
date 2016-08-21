@@ -265,7 +265,7 @@ def search_overseer_thread(args, new_location_queue, pause_bit, encryption_lib_p
         threadStatus['Worker {:03}'.format(i)]['noitems'] = 0
 
         t = Thread(target=search_worker_thread,
-                   name='search-worker-{}'.format(i),
+                   name='search-worker-{}'.format(account["username"]),
                    args=(args, account, search_items_queue, parse_lock,
                          encryption_lib_path, threadStatus['Worker {:03}'.format(i)],
                          db_updates_queue, wh_queue))
@@ -420,7 +420,7 @@ def search_overseer_thread_ss(args, new_location_queue, pause_bit, encryption_li
     # find the inital location (spawn thats 60sec old)
     pos = SbSearch(spawns, (curSec() + 3540) % 3600)
     while True:
-        while timeDif(curSec(), spawns[pos]['time']) < 60:
+        while timeDif(curSec(), spawns[pos]['time']) < 5:
             threadStatus['Overseer']['message'] = "Waiting for spawnpoints {} of {} to spawn at {}".format(pos, len(spawns), spawns[pos]['time'])
             time.sleep(1)
         # make location with a dummy height (seems to be more reliable than 0 height)

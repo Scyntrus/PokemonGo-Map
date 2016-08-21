@@ -21,6 +21,8 @@ var searchMarkerStyles
 
 var excludedPokemon = []
 var notifiedPokemon = []
+var excludedPokemonSet = new Set();
+var notifiedPokemonSet = new Set();
 var notifiedRarity = []
 
 var map
@@ -1196,7 +1198,7 @@ function setupPokemonMarker (item, skipNotification, isBounceDisabled) {
     disableAutoPan: true
   })
 
-  if (notifiedPokemon.indexOf(item['pokemon_id']) > -1 || notifiedRarity.indexOf(item['pokemon_rarity']) > -1) {
+  if (notifiedPokemonSet.has(item['pokemon_id']) || notifiedRarity.indexOf(item['pokemon_rarity']) > -1) {
     if (!skipNotification) {
       if (Store.get('playSound')) {
         audio.play()
@@ -1339,7 +1341,7 @@ function addListeners (marker) {
 function clearStaleMarkers () {
   $.each(mapData.pokemons, function (key, value) {
     if (mapData.pokemons[key]['disappear_time'] < new Date().getTime() ||
-      excludedPokemon.indexOf(mapData.pokemons[key]['pokemon_id']) >= 0) {
+      excludedPokemonSet.has(mapData.pokemons[key]['pokemon_id'])) {
       mapData.pokemons[key].marker.setMap(null)
       delete mapData.pokemons[key]
     }
@@ -1347,7 +1349,7 @@ function clearStaleMarkers () {
 
   $.each(mapData.lurePokemons, function (key, value) {
     if (mapData.lurePokemons[key]['lure_expiration'] < new Date().getTime() ||
-      excludedPokemon.indexOf(mapData.lurePokemons[key]['pokemon_id']) >= 0) {
+      excludedPokemonSet.has(mapData.lurePokemons[key]['pokemon_id'])) {
       mapData.lurePokemons[key].marker.setMap(null)
       delete mapData.lurePokemons[key]
     }
@@ -1444,7 +1446,7 @@ function processPokemons (i, item) {
   }
 
   if (!(item['encounter_id'] in mapData.pokemons) &&
-    excludedPokemon.indexOf(item['pokemon_id']) < 0) {
+    !excludedPokemonSet.has(item['pokemon_id'])) {
     // add marker to map and item to dict
     if (item.marker) {
       item.marker.setMap(null)
@@ -1682,7 +1684,7 @@ function centerMapOnLocation () {
       map.setCenter(latlng)
       clearInterval(animationInterval)
       currentLocation.style.backgroundPosition = '-144px 0px'
-    })
+    }, function() {}, {enableHighAccuracy: true});
   } else {
     clearInterval(animationInterval)
     currentLocation.style.backgroundPosition = '0px 0px'
@@ -1955,10 +1957,12 @@ $(function () {
       excludedPokemon = $selectExclude.val().map(Number)
       clearStaleMarkers()
       Store.set('remember_select_exclude', excludedPokemon)
+      excludedPokemonSet = new Set(excludedPokemon);
     })
     $selectPokemonNotify.on('change', function (e) {
       notifiedPokemon = $selectPokemonNotify.val().map(Number)
       Store.set('remember_select_notify', notifiedPokemon)
+      notifiedPokemonSet = new Set(notifiedPokemon);
     })
     $selectRarityNotify.on('change', function (e) {
       notifiedRarity = $selectRarityNotify.val().map(String)
@@ -1989,7 +1993,7 @@ $(function () {
             searchMarker.setPosition(center)
           })
         }
-      })
+      }, function() {}, {enableHighAccuracy: true});
     }
   }, 1000)
 
